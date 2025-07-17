@@ -1,0 +1,141 @@
+{
+  // Security Configuration for Razgazdayson
+  // JSON5 format allows comments and trailing commas
+  
+  "cors": {
+    "allowed_origins": [
+      "https://razgazdayson.ru",
+      "https://www.razgazdayson.ru",
+      "https://app.razgazdayson.ru",
+      "https://telegram.org", // For Telegram WebApp
+    ],
+    "allowed_methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    "allowed_headers": ["*"],
+    "expose_headers": ["X-Total-Count", "X-Page-Count"],
+    "allow_credentials": true,
+    "max_age": 86400, // 24 hours
+  },
+  
+  "csp": {
+    "default_src": ["'self'"],
+    "script_src": ["'self'", "'unsafe-inline'", "https://telegram.org"],
+    "style_src": ["'self'", "'unsafe-inline'"],
+    "img_src": ["'self'", "data:", "https:"],
+    "font_src": ["'self'", "data:"],
+    "connect_src": ["'self'", "https://api.razgazdayson.ru", "wss://api.razgazdayson.ru"],
+    "frame_ancestors": ["'none'"],
+    "base_uri": ["'self'"],
+    "form_action": ["'self'"],
+  },
+  
+  "headers": {
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-Content-Type-Options": "nosniff",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+  },
+  
+  "rate_limiting": {
+    "global": {
+      "window_ms": 900000, // 15 minutes
+      "max_requests": 100,
+      "message": "Too many requests from this IP",
+    },
+    "api": {
+      "window_ms": 60000, // 1 minute
+      "max_requests": 60,
+    },
+    "auth": {
+      "window_ms": 900000, // 15 minutes
+      "max_requests": 5,
+      "skip_successful_requests": false,
+    },
+    "dreams": {
+      "window_ms": 86400000, // 24 hours
+      "max_requests_free": 1,
+      "max_requests_pro": -1, // unlimited
+    },
+  },
+  
+  "encryption": {
+    "algorithm": "AES-256-GCM",
+    "key_rotation_days": 90,
+    "fields_to_encrypt": [
+      "user.email",
+      "user.phone",
+      "payment.card_number",
+    ],
+  },
+  
+  "authentication": {
+    "jwt": {
+      "algorithm": "HS256",
+      "access_token_expires": 1800, // 30 minutes
+      "refresh_token_expires": 604800, // 7 days
+      "issuer": "razgazdayson.ru",
+      "audience": "razgazdayson-users",
+    },
+    "password": {
+      "min_length": 8,
+      "require_uppercase": true,
+      "require_lowercase": true,
+      "require_numbers": true,
+      "require_special": true,
+      "bcrypt_rounds": 12,
+    },
+    "oauth": {
+      "telegram": {
+        "enabled": true,
+        "bot_token_env": "TELEGRAM_BOT_TOKEN",
+      },
+    },
+  },
+  
+  "input_validation": {
+    "max_dream_length": 4000,
+    "min_dream_length": 20,
+    "max_voice_duration": 60, // seconds
+    "allowed_file_types": ["mp3", "wav", "ogg", "m4a"],
+    "max_file_size": 10485760, // 10MB
+    "sanitize_html": true,
+    "strip_scripts": true,
+  },
+  
+  "api_keys": {
+    "rotation_days": 30,
+    "key_prefix": "rzgd_",
+    "scopes": ["read", "write", "admin"],
+  },
+  
+  "audit": {
+    "enabled": true,
+    "events_to_log": [
+      "user.login",
+      "user.logout",
+      "user.register",
+      "user.delete",
+      "payment.success",
+      "payment.failure",
+      "admin.action",
+    ],
+    "retention_days": 90,
+  },
+  
+  "firewall": {
+    "ip_whitelist": [],
+    "ip_blacklist": [],
+    "country_blacklist": [],
+    "enable_cloudflare": true,
+    "block_tor_exit_nodes": false,
+    "block_vpn": false,
+  },
+  
+  "ddos_protection": {
+    "enabled": true,
+    "cloudflare_enabled": true,
+    "rate_limit_by_ip": true,
+    "challenge_suspicious": true,
+  },
+}
