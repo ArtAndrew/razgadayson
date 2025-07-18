@@ -11,9 +11,11 @@
 from .ai.openai_service import OpenAIService
 from .ai.dream_interpreter import DreamInterpreter
 from .ai.embedding_service import EmbeddingService
+from .auth_service import AuthService
 
 __all__ = [
     "OpenAIService",
     "DreamInterpreter", 
-    "EmbeddingService"
+    "EmbeddingService",
+    "AuthService"
 ]
