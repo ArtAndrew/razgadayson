@@ -8,46 +8,60 @@ AI-powered dream interpretation service available as Telegram WebApp and web app
 
 ## Core Features
 
-- Text/voice dream input
-- AI interpretation (symbols, emotions, advice)
-- OpenAI-TTS voice output
-- Personal dream journal with tags and statistics
-- Push notifications and drip content
-- Pro subscription + Deep-Dive analysis
-- Referral program
+- 🎯 **AI Dream Analysis**: GPT-4 powered interpretation in 30 seconds
+- 🎙️ **Voice Input**: Dictate dreams using Whisper transcription
+- 🔊 **TTS Output**: Listen to interpretations with OpenAI TTS
+- 📔 **Dream Journal**: Personal diary with search and filters
+- 🔍 **Semantic Search**: Find similar dreams using vector embeddings
+- 💎 **Pro Features**: Deep analysis, unlimited dreams, priority support
+- 👥 **Referral Program**: Invite friends and get rewards
 
 ## Tech Stack
 
 ### Backend
 - **Framework**: FastAPI 0.109.0 (Python 3.12)
 - **Database**: PostgreSQL 16 with SQLAlchemy ORM
+- **Vector Search**: pgvector extension for semantic similarity
 - **Cache**: Redis 7 (TTL=1h)
 - **Task Queue**: Celery + Redis
 - **AI**: OpenAI GPT-4, Whisper ASR, OpenAI TTS
-- **Vector Store**: pgvector extension for semantic search
+- **Auth**: JWT tokens + Telegram OAuth
 
 ### Frontend
-- **Web App**: Next.js + React + Tailwind CSS
-- **Telegram WebApp**: React + Tailwind CSS
-- **Telegram Bot**: Python (aiogram)
+- **Web App**: Next.js 15.4 + React 19 + TypeScript
+- **Telegram WebApp**: React 18 + TypeScript + Tailwind CSS
+- **Telegram Bot**: Python (aiogram 3.x)
+- **Styling**: Tailwind CSS 3.4
 
 ### Infrastructure
 - **Hosting**: Self-hosted with Nginx
+- **Containers**: Docker + Docker Compose
 - **Monitoring**: Prometheus + Grafana
 - **Error Tracking**: Sentry
-- **CI/CD**: GitHub Actions / GitLab CI
+- **CI/CD**: GitHub Actions
 
 ## Project Structure
 
 ```
 razgazdayson/
 ├── backend/              # FastAPI backend service
-├── frontend/             # Next.js web application
-├── telegram-webapp/      # Telegram WebApp client
-├── telegram-bot/         # Telegram bot service
-├── shared/              # Shared resources
-├── docker/              # Docker configurations
-├── docs/                # Project documentation
+│   ├── app/             # Application code
+│   │   ├── api/         # REST API endpoints
+│   │   ├── models/      # Pydantic schemas & SQLAlchemy models
+│   │   ├── services/    # Business logic & AI services
+│   │   └── core/        # Core utilities
+│   ├── migrations/      # Alembic database migrations
+│   └── tests/          # Unit and integration tests
+├── frontend/            # Next.js web application
+│   ├── src/            # Source code
+│   │   ├── app/        # App router pages
+│   │   ├── components/ # React components
+│   │   └── lib/        # Utilities and API client
+│   └── public/         # Static assets
+├── telegram-webapp/     # Telegram WebApp client
+├── telegram-bot/        # Telegram bot service
+├── docker/             # Docker configurations
+└── docs/               # Project documentation
 ├── monitoring/          # Monitoring setup
 ├── feedback/            # Feedback collection service
 └── configs/             # Configuration files

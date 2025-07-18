@@ -25,10 +25,11 @@ Check if the service is running.
 **Response:**
 ```json
 {
-  "status": "ok",
-  "service": "Razgazdayson",
+  "status": "healthy",
   "version": "1.0.0",
-  "timestamp": 1704067200
+  "environment": "development",
+  "timestamp": "2024-01-01T12:00:00Z",
+  "services": {}
 }
 ```
 
@@ -38,26 +39,32 @@ Check if the service is ready to accept requests.
 **Response:**
 ```json
 {
-  "status": "ok",
-  "checks": {
-    "database": true,
-    "redis": true
+  "status": "healthy",
+  "version": "1.0.0", 
+  "environment": "development",
+  "timestamp": "2024-01-01T12:00:00Z",
+  "services": {
+    "database": "ok",
+    "redis": "ok"
   }
 }
 ```
 
 ### Authentication
 
-#### POST /auth/register
-Register a new user.
+#### POST /api/v1/auth/telegram
+Authenticate user via Telegram OAuth.
 
-**Request:**
+**Request Body:**
 ```json
 {
-  "telegram_id": 123456789,
-  "username": "john_doe",
+  "id": 123456789,
   "first_name": "John",
-  "last_name": "Doe"
+  "last_name": "Doe",
+  "username": "johndoe",
+  "photo_url": "https://t.me/i/userpic/320/johndoe.jpg",
+  "auth_date": 1704067200,
+  "hash": "f1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcd"
 }
 ```
 
@@ -65,372 +72,361 @@ Register a new user.
 ```json
 {
   "user": {
-    "id": "uuid",
+    "id": "550e8400-e29b-41d4-a716-446655440000",
     "telegram_id": 123456789,
-    "username": "john_doe"
+    "username": "johndoe",
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": null,
+    "language_code": "ru",
+    "timezone": "Europe/Moscow",
+    "created_at": "2024-01-01T12:00:00Z",
+    "is_active": true,
+    "subscription_type": "free",
+    "daily_limit": 1,
+    "dreams_today": 0
   },
-  "access_token": "jwt_token",
-  "refresh_token": "refresh_token"
+  "tokens": {
+    "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "token_type": "bearer",
+    "expires_in": 1800
+  },
+  "is_new_user": false
 }
 ```
 
-#### POST /auth/login
-Login with Telegram credentials.
+#### POST /api/v1/auth/refresh
+Refresh access token using refresh token.
 
-**Request:**
+**Request Body:**
 ```json
 {
-  "telegram_auth_data": "..."
-}
-```
-
-**Response:**
-```json
-{
-  "access_token": "jwt_token",
-  "refresh_token": "refresh_token",
-  "user": {...}
-}
-```
-
-#### POST /auth/refresh
-Refresh access token.
-
-**Request:**
-```json
-{
-  "refresh_token": "refresh_token"
+  "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
 }
 ```
 
 **Response:**
 ```json
 {
-  "access_token": "new_jwt_token"
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "token_type": "bearer",
+  "expires_in": 1800
+}
+```
+
+#### GET /api/v1/auth/me
+Get current user information.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "telegram_id": 123456789,
+  "username": "johndoe",
+  "first_name": "John",
+  "last_name": "Doe",
+  "email": null,
+  "language_code": "ru",
+  "timezone": "Europe/Moscow",
+  "created_at": "2024-01-01T12:00:00Z",
+  "is_active": true,
+  "subscription_type": "free",
+  "daily_limit": 1,
+  "dreams_today": 0
 }
 ```
 
 ### Dreams
 
-#### POST /dreams
-Create a new dream interpretation.
+#### POST /api/v1/dreams/interpret
+Interpret a dream using AI.
 
-**Request:**
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Request Body:**
 ```json
 {
-  "text": "I dreamed about flying over the ocean...",
-  "language": "ru"
+  "text": "Мне снилось, что я летаю над городом...",
+  "voice_data": null,
+  "language": "ru",
+  "include_similar": true
+}
+```
+
+**Alternative with voice:**
+```json
+{
+  "text": "",
+  "voice_data": "base64_encoded_audio_data...",
+  "language": "ru",
+  "include_similar": true
 }
 ```
 
 **Response:**
 ```json
 {
-  "id": "uuid",
-  "text": "I dreamed about flying over the ocean...",
+  "dream_id": "550e8400-e29b-41d4-a716-446655440001",
   "interpretation": {
-    "main_symbol": {
-      "name": "Flying",
-      "emoji": "🦅",
-      "meaning": "Freedom and ambition"
-    },
-    "interpretation": "Your dream suggests...",
+    "id": "550e8400-e29b-41d4-a716-446655440002",
+    "dream_id": "550e8400-e29b-41d4-a716-446655440001",
+    "main_symbol": "Полет",
+    "main_symbol_emoji": "🦅",
+    "interpretation": "Полет во сне часто символизирует стремление к свободе и независимости...",
     "emotions": [
       {
-        "name": "Freedom",
-        "intensity": "high",
-        "color": "#4A90E2"
+        "name": "свобода",
+        "intensity": "высокая",
+        "meaning": "Желание освободиться от ограничений"
       }
     ],
-    "advice": "Consider exploring new opportunities..."
+    "advice": "Обратите внимание на области жизни, где вы чувствуете себя ограниченным...",
+    "ai_model": "gpt-4-turbo-preview",
+    "prompt_version": "v1.0",
+    "created_at": "2024-01-01T12:00:00Z",
+    "processing_time_ms": 2500
   },
-  "created_at": "2024-01-01T00:00:00Z"
+  "similar_dreams": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "text": "Я парил над облаками и видел...",
+      "main_symbol": "Полет",
+      "similarity": 0.89,
+      "created_at": "2023-12-15T10:30:00Z"
+    }
+  ],
+  "daily_limit_remaining": 0,
+  "is_saved": true
 }
 ```
 
-#### GET /dreams
-Get user's dreams list.
+**Error Responses:**
+
+- `400 Bad Request` - Invalid input (text too short/long)
+- `401 Unauthorized` - Invalid or missing token
+- `429 Too Many Requests` - Daily limit exceeded
+- `500 Internal Server Error` - AI service error
+
+#### GET /api/v1/dreams
+Get user's dream journal with pagination.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
 
 **Query Parameters:**
-- `page` (default: 1)
-- `limit` (default: 20)
-- `tag` (optional)
-- `search` (optional)
+- `page` (int, default: 1) - Page number
+- `limit` (int, default: 20, max: 100) - Items per page
+- `search` (string, optional) - Search in dream text
+- `tag` (string, optional) - Filter by tag
 
 **Response:**
 ```json
 {
-  "dreams": [
+  "items": [
     {
-      "id": "uuid",
-      "text": "Dream text preview...",
-      "main_symbol": "🌊",
-      "created_at": "2024-01-01T00:00:00Z"
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "text": "Мне снилось, что я летаю над городом...",
+      "voice_url": null,
+      "language": "ru",
+      "created_at": "2024-01-01T12:00:00Z",
+      "interpretation": {
+        "main_symbol": "Полет",
+        "main_symbol_emoji": "🦅",
+        "interpretation": "Полет во сне часто символизирует..."
+      },
+      "tags": ["полет", "свобода"],
+      "similar_dreams_count": 3
     }
   ],
-  "total": 100,
+  "total": 42,
   "page": 1,
-  "pages": 5
+  "limit": 20,
+  "pages": 3
 }
 ```
 
-#### GET /dreams/{dream_id}
-Get specific dream details.
+#### GET /api/v1/dreams/{dream_id}
+Get specific dream by ID.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
 
 **Response:**
 ```json
 {
-  "id": "uuid",
-  "text": "Full dream text...",
-  "interpretation": {...},
-  "tags": ["water", "emotion"],
-  "is_favorite": false,
-  "similar_dreams": [
-    {
-      "id": "uuid",
-      "text": "Similar dream preview...",
-      "similarity": 0.85,
-      "main_symbol": "🌊"
-    }
-  ],
-  "created_at": "2024-01-01T00:00:00Z"
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "text": "Мне снилось, что я летаю над городом...",
+  "voice_url": null,
+  "language": "ru",
+  "created_at": "2024-01-01T12:00:00Z",
+  "interpretation": {
+    "id": "550e8400-e29b-41d4-a716-446655440002",
+    "dream_id": "550e8400-e29b-41d4-a716-446655440001",
+    "main_symbol": "Полет",
+    "main_symbol_emoji": "🦅",
+    "interpretation": "Полет во сне часто символизирует стремление к свободе...",
+    "emotions": [
+      {
+        "name": "свобода",
+        "intensity": "высокая",
+        "meaning": "Желание освободиться от ограничений"
+      }
+    ],
+    "advice": "Обратите внимание на области жизни...",
+    "ai_model": "gpt-4-turbo-preview",
+    "prompt_version": "v1.0",
+    "created_at": "2024-01-01T12:00:00Z",
+    "processing_time_ms": 2500
+  },
+  "tags": ["полет", "свобода"],
+  "similar_dreams_count": 3
 }
 ```
 
-#### DELETE /dreams/{dream_id}
-Delete a dream.
+#### PUT /api/v1/dreams/{dream_id}
+Update dream (edit text or soft delete).
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Request Body:**
+```json
+{
+  "text": "Обновленное описание сна...",
+  "is_deleted": false
+}
+```
 
 **Response:**
 ```json
 {
-  "message": "Dream deleted successfully"
+  "success": true,
+  "message": "Dream updated successfully"
 }
 ```
 
-### Dream Similarity
+#### DELETE /api/v1/dreams/{dream_id}
+Permanently delete dream.
 
-#### GET /dreams/{dream_id}/similar
-Get dreams similar to the specified dream.
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Dream deleted permanently"
+}
+```
+
+#### POST /api/v1/dreams/{dream_id}/tts
+Generate TTS audio for dream interpretation (Pro feature).
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
 
 **Query Parameters:**
-- `limit` (default: 10) - Maximum number of similar dreams to return
-- `threshold` (default: 0.7) - Minimum similarity score (0-1)
+- `voice` (string, default: "nova") - Voice to use: nova, alloy, echo, fable, onyx, shimmer
 
 **Response:**
 ```json
 {
-  "dream_id": "uuid",
-  "similar_dreams": [
-    {
-      "id": "uuid",
-      "text": "Similar dream text...",
-      "similarity": 0.85,
-      "main_symbol": "🌊",
-      "interpretation": "Brief interpretation...",
-      "created_at": "2024-01-01T00:00:00Z"
-    }
-  ],
-  "total_found": 5
+  "audio": "base64_encoded_mp3_audio...",
+  "format": "mp3",
+  "voice": "nova"
 }
 ```
 
-#### POST /dreams/search
-Search for dreams by semantic similarity.
+**Error Responses:**
+- `403 Forbidden` - Feature requires Pro subscription
+- `404 Not Found` - Dream or interpretation not found
 
-**Request:**
-```json
-{
-  "query": "flying over the ocean",
-  "limit": 20,
-  "threshold": 0.6
-}
+### Subscriptions
+
+#### GET /api/v1/subscriptions/current
+Get current user subscription.
+
+**Headers:**
+```
+Authorization: Bearer <token>
 ```
 
 **Response:**
 ```json
 {
-  "query": "flying over the ocean",
-  "results": [
-    {
-      "id": "uuid",
-      "text": "Dream text...",
-      "similarity": 0.92,
-      "main_symbol": "🦅",
-      "interpretation": "Dream interpretation...",
-      "created_at": "2024-01-01T00:00:00Z"
-    }
-  ],
-  "total_found": 15
-}
-```
-
-### Dream Analytics
-
-#### GET /dreams/analytics/symbols
-Get most common dream symbols for the user.
-
-**Response:**
-```json
-{
-  "symbols": [
-    {
-      "symbol": "🌊",
-      "name": "Water",
-      "count": 12,
-      "percentage": 24.5
-    },
-    {
-      "symbol": "🦅",
-      "name": "Flying",
-      "count": 8,
-      "percentage": 16.3
-    }
-  ],
-  "total_dreams": 49
-}
-```
-
-#### GET /dreams/analytics/emotions
-Get emotion patterns in user's dreams.
-
-**Response:**
-```json
-{
-  "emotions": [
-    {
-      "name": "Freedom",
-      "count": 15,
-      "average_intensity": 0.8,
-      "color": "#4A90E2"
-    },
-    {
-      "name": "Fear",
-      "count": 8,
-      "average_intensity": 0.6,
-      "color": "#E74C3C"
-    }
-  ],
-  "total_dreams": 49
+  "id": "550e8400-e29b-41d4-a716-446655440010",
+  "type": "free",
+  "status": "active",
+  "start_date": "2024-01-01T00:00:00Z",
+  "end_date": null,
+  "is_active": true,
+  "daily_limit": 1,
+  "features": {
+    "daily_limit": 1,
+    "voice_input": true,
+    "tts_output": false,
+    "deep_analysis": false,
+    "similar_dreams": false,
+    "export_data": false,
+    "priority_support": false
+  }
 }
 ```
 
 ### Users
 
-#### GET /users/me
-Get current user profile.
+#### GET /api/v1/users/stats
+Get user statistics.
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
 
 **Response:**
 ```json
 {
-  "id": "uuid",
-  "telegram_id": 123456789,
-  "username": "john_doe",
-  "first_name": "John",
-  "subscription": {
-    "type": "free",
-    "status": "active",
-    "features": {
-      "daily_limit": 1,
-      "deep_analysis": false,
-      "voice_interpretation": false,
-      "dream_similarity": false,
-      "export_data": false
-    }
-  },
-  "stats": {
-    "total_dreams": 24,
-    "current_streak": 7,
-    "favorite_symbol": "🌊"
-  }
+  "user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "total_dreams": 42,
+  "current_streak": 7,
+  "longest_streak": 15,
+  "last_dream_date": "2024-01-01T00:00:00Z",
+  "favorite_symbol": "Полет",
+  "favorite_symbol_count": 5,
+  "updated_at": "2024-01-01T12:00:00Z"
 }
 ```
 
-#### PATCH /users/me
-Update user profile.
+## Rate Limiting
 
-**Request:**
-```json
-{
-  "preferences": {
-    "language": "en",
-    "notifications": {
-      "daily_reminder": true,
-      "reminder_time": "09:00"
-    }
-  }
-}
+- Free users: 1 dream per day
+- Trial users: 3 dreams per day
+- Pro/Yearly users: Unlimited
+
+Rate limit headers are included in responses:
 ```
-
-### Subscriptions
-
-#### GET /subscriptions/current
-Get current subscription details.
-
-**Response:**
-```json
-{
-  "type": "pro",
-  "status": "active",
-  "start_date": "2024-01-01T00:00:00Z",
-  "end_date": "2024-02-01T00:00:00Z",
-  "features": {
-    "daily_limit": -1,
-    "deep_analysis": true,
-    "voice_interpretation": true,
-    "dream_similarity": true,
-    "export_data": true,
-    "advanced_analytics": true
-  }
-}
-```
-
-#### POST /subscriptions
-Create new subscription.
-
-**Request:**
-```json
-{
-  "plan": "monthly",
-  "payment_method": "telegram_stars"
-}
-```
-
-### Data Export
-
-#### GET /export/dreams
-Export user's dreams data (Pro feature).
-
-**Query Parameters:**
-- `format` (json|csv) - Export format
-- `date_from` - Start date (YYYY-MM-DD)
-- `date_to` - End date (YYYY-MM-DD)
-
-**Response:**
-```json
-{
-  "export_id": "uuid",
-  "format": "json",
-  "status": "processing",
-  "download_url": null,
-  "created_at": "2024-01-01T00:00:00Z",
-  "expires_at": "2024-01-02T00:00:00Z"
-}
-```
-
-#### GET /export/dreams/{export_id}
-Get export status and download link.
-
-**Response:**
-```json
-{
-  "export_id": "uuid",
-  "format": "json",
-  "status": "completed",
-  "download_url": "https://api.razgazdayson.ru/downloads/export_uuid.json",
-  "file_size": 1024000,
-  "created_at": "2024-01-01T00:00:00Z",
-  "expires_at": "2024-01-02T00:00:00Z"
-}
+X-Daily-Limit: 1
+X-Used-Today: 1
 ```
 
 ## Error Responses
@@ -439,29 +435,19 @@ All errors follow this format:
 
 ```json
 {
-  "error": "Error type",
-  "message": "Human-readable error message",
-  "details": {...}
+  "error": "ValidationError",
+  "message": "Dream description must be at least 20 characters",
+  "details": null,
+  "code": "VALIDATION_ERROR",
+  "request_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
-Common error codes:
-- 400: Bad Request
-- 401: Unauthorized
-- 403: Forbidden
-- 404: Not Found
-- 429: Too Many Requests
-- 500: Internal Server Error
-
-## Rate Limiting
-
-- Anonymous users: 10 requests/hour
-- Free users: 1000 requests/day
-- Pro users: Unlimited
-
-Rate limit headers:
-```
-X-RateLimit-Limit: 1000
-X-RateLimit-Remaining: 999
-X-RateLimit-Reset: 1704153600
-```
+Common HTTP status codes:
+- `400` - Bad Request (validation errors)
+- `401` - Unauthorized (missing/invalid token)
+- `403` - Forbidden (insufficient permissions)
+- `404` - Not Found
+- `429` - Too Many Requests (rate limit)
+- `500` - Internal Server Error
+- `503` - Service Unavailable
