@@ -43,6 +43,8 @@ Razgazdayson is a microservices-based AI dream interpretation platform consistin
 
 - **Purpose**: Core business logic, API endpoints, AI integration
 - **Technology**: FastAPI 0.109.0, Python 3.12
+- **Database**: SQLAlchemy 2.0 with async support
+- **Migrations**: Alembic
 - **Key Features**:
   - Async/await for high performance
   - Automatic OpenAPI documentation
@@ -54,6 +56,7 @@ Razgazdayson is a microservices-based AI dream interpretation platform consistin
 
 - **Purpose**: Marketing website and web application
 - **Technology**: Next.js 15.4, React 19, TypeScript
+- **Styling**: Tailwind CSS 3.4
 - **Key Features**:
   - Server-side rendering (SSR) for SEO
   - Static site generation (SSG) for performance
@@ -64,6 +67,7 @@ Razgazdayson is a microservices-based AI dream interpretation platform consistin
 
 - **Purpose**: Telegram bot interface for users
 - **Technology**: aiogram 3.3, Python 3.12
+- **Deployment**: Docker container with polling/webhook support
 - **Key Features**:
   - Webhook and polling support
   - FSM for conversation flow
@@ -74,6 +78,8 @@ Razgazdayson is a microservices-based AI dream interpretation platform consistin
 
 - **Purpose**: Rich UI experience within Telegram
 - **Technology**: React 18, TypeScript, Tailwind CSS
+- **Build**: Vite for fast development
+- **Deployment**: Nginx static serving
 - **Key Features**:
   - Telegram WebApp SDK integration
   - Responsive design
@@ -84,11 +90,15 @@ Razgazdayson is a microservices-based AI dream interpretation platform consistin
 
 - **Purpose**: Primary data storage
 - **Technology**: PostgreSQL 16 with pgvector extension
+- **Image**: pgvector/pgvector:pg16 (Docker)
 - **Key Features**:
-  - Vector similarity search for dream patterns
-  - Full-text search for dream content
+  - Vector similarity search for dream patterns (pgvector extension)
+  - Full-text search for dream content (Russian language support)
   - JSONB for flexible data structures
   - Row-level security
+  - Automated database initialization with init-db.sql
+  - Vector indexes for cosine similarity search
+  - Trigger-based automatic timestamps
 
 ### Cache (Redis)
 
@@ -103,14 +113,19 @@ Razgazdayson is a microservices-based AI dream interpretation platform consistin
 ## Data Flow
 
 1. **User Input**: User submits dream via Telegram Bot, WebApp, or Web
-2. **Validation**: Input validated and rate limits checked
+2. **Validation**: Input validated (20-4000 chars) and rate limits checked
 3. **Processing**: 
    - Text normalized and prepared
-   - Voice converted to text (if applicable)
-   - Sent to OpenAI API for interpretation
-4. **Caching**: Results cached in Redis
-5. **Storage**: Dream and interpretation saved to PostgreSQL
-6. **Response**: Formatted result returned to user
+   - Voice converted to text using OpenAI Whisper (if applicable)
+   - Generate vector embeddings using OpenAI text-embedding-ada-002
+   - Sent to OpenAI GPT-4 for interpretation
+4. **Similarity Search**: 
+   - Store dream embedding in pgvector
+   - Find similar dreams using cosine similarity
+   - Enhance interpretation with similar dream patterns
+5. **Caching**: Results cached in Redis with TTL
+6. **Storage**: Dream and interpretation saved to PostgreSQL
+7. **Response**: Formatted result returned to user with symbols and advice
 
 ## Security
 
@@ -133,15 +148,41 @@ Razgazdayson is a microservices-based AI dream interpretation platform consistin
 ## Scalability
 
 - **Horizontal Scaling**: Stateless services allow easy scaling
-- **Database**: Read replicas for read-heavy operations
-- **Caching**: Redis cluster for distributed caching
+- **Database**: 
+  - Read replicas for read-heavy operations
+  - pgvector indexes optimized for similarity search
+  - Connection pooling with SQLAlchemy
+- **Caching**: 
+  - Redis cluster for distributed caching
+  - LLM response caching to reduce API costs
+  - User session caching
 - **CDN**: Static assets served via CDN
 - **Load Balancing**: Nginx for request distribution
+- **Vector Search**: Optimized with ivfflat indexes for large datasets
 
 ## Development Workflow
 
 1. **Local Development**: Docker Compose for all services
+   - Use `make start` to start all services
+   - Use `make logs` to view service logs
+   - Use `make db-shell` for database access
+   - Use `make migrate` to run database migrations
+
 2. **Version Control**: Git with feature branches
+   - Repository: git@github.com:ArtAndrew/razgadayson.git
+   - Branch protection rules enabled
+
 3. **CI/CD**: GitHub Actions / GitLab CI
+   - Automated testing on pull requests
+   - Docker image builds
+   - Deployment to staging/production
+
 4. **Testing**: Unit, integration, and E2E tests
+   - Use `make test` to run all tests
+   - Use `make test-backend` for backend tests only
+   - Use `make test-frontend` for frontend tests only
+
 5. **Code Quality**: Pre-commit hooks, linting, type checking
+   - Python: black, flake8, mypy
+   - TypeScript: eslint, prettier
+   - Automated formatting on commit

@@ -185,6 +185,14 @@ Get specific dream details.
   "interpretation": {...},
   "tags": ["water", "emotion"],
   "is_favorite": false,
+  "similar_dreams": [
+    {
+      "id": "uuid",
+      "text": "Similar dream preview...",
+      "similarity": 0.85,
+      "main_symbol": "🌊"
+    }
+  ],
   "created_at": "2024-01-01T00:00:00Z"
 }
 ```
@@ -196,6 +204,113 @@ Delete a dream.
 ```json
 {
   "message": "Dream deleted successfully"
+}
+```
+
+### Dream Similarity
+
+#### GET /dreams/{dream_id}/similar
+Get dreams similar to the specified dream.
+
+**Query Parameters:**
+- `limit` (default: 10) - Maximum number of similar dreams to return
+- `threshold` (default: 0.7) - Minimum similarity score (0-1)
+
+**Response:**
+```json
+{
+  "dream_id": "uuid",
+  "similar_dreams": [
+    {
+      "id": "uuid",
+      "text": "Similar dream text...",
+      "similarity": 0.85,
+      "main_symbol": "🌊",
+      "interpretation": "Brief interpretation...",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "total_found": 5
+}
+```
+
+#### POST /dreams/search
+Search for dreams by semantic similarity.
+
+**Request:**
+```json
+{
+  "query": "flying over the ocean",
+  "limit": 20,
+  "threshold": 0.6
+}
+```
+
+**Response:**
+```json
+{
+  "query": "flying over the ocean",
+  "results": [
+    {
+      "id": "uuid",
+      "text": "Dream text...",
+      "similarity": 0.92,
+      "main_symbol": "🦅",
+      "interpretation": "Dream interpretation...",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "total_found": 15
+}
+```
+
+### Dream Analytics
+
+#### GET /dreams/analytics/symbols
+Get most common dream symbols for the user.
+
+**Response:**
+```json
+{
+  "symbols": [
+    {
+      "symbol": "🌊",
+      "name": "Water",
+      "count": 12,
+      "percentage": 24.5
+    },
+    {
+      "symbol": "🦅",
+      "name": "Flying",
+      "count": 8,
+      "percentage": 16.3
+    }
+  ],
+  "total_dreams": 49
+}
+```
+
+#### GET /dreams/analytics/emotions
+Get emotion patterns in user's dreams.
+
+**Response:**
+```json
+{
+  "emotions": [
+    {
+      "name": "Freedom",
+      "count": 15,
+      "average_intensity": 0.8,
+      "color": "#4A90E2"
+    },
+    {
+      "name": "Fear",
+      "count": 8,
+      "average_intensity": 0.6,
+      "color": "#E74C3C"
+    }
+  ],
+  "total_dreams": 49
 }
 ```
 
@@ -216,7 +331,10 @@ Get current user profile.
     "status": "active",
     "features": {
       "daily_limit": 1,
-      "deep_analysis": false
+      "deep_analysis": false,
+      "voice_interpretation": false,
+      "dream_similarity": false,
+      "export_data": false
     }
   },
   "stats": {
@@ -258,7 +376,10 @@ Get current subscription details.
   "features": {
     "daily_limit": -1,
     "deep_analysis": true,
-    "voice_interpretation": true
+    "voice_interpretation": true,
+    "dream_similarity": true,
+    "export_data": true,
+    "advanced_analytics": true
   }
 }
 ```
@@ -271,6 +392,44 @@ Create new subscription.
 {
   "plan": "monthly",
   "payment_method": "telegram_stars"
+}
+```
+
+### Data Export
+
+#### GET /export/dreams
+Export user's dreams data (Pro feature).
+
+**Query Parameters:**
+- `format` (json|csv) - Export format
+- `date_from` - Start date (YYYY-MM-DD)
+- `date_to` - End date (YYYY-MM-DD)
+
+**Response:**
+```json
+{
+  "export_id": "uuid",
+  "format": "json",
+  "status": "processing",
+  "download_url": null,
+  "created_at": "2024-01-01T00:00:00Z",
+  "expires_at": "2024-01-02T00:00:00Z"
+}
+```
+
+#### GET /export/dreams/{export_id}
+Get export status and download link.
+
+**Response:**
+```json
+{
+  "export_id": "uuid",
+  "format": "json",
+  "status": "completed",
+  "download_url": "https://api.razgazdayson.ru/downloads/export_uuid.json",
+  "file_size": 1024000,
+  "created_at": "2024-01-01T00:00:00Z",
+  "expires_at": "2024-01-02T00:00:00Z"
 }
 ```
 

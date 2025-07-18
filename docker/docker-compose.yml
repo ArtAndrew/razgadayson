@@ -1,20 +1,22 @@
 version: '3.9'
 
 services:
-  # PostgreSQL Database
+  # PostgreSQL Database with pgvector
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: razgazdayson_postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: razgazdayson
+      POSTGRES_INITDB_ARGS: "-c shared_preload_libraries=vector"
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres && psql -U postgres -d razgazdayson -c 'SELECT 1 FROM pg_extension WHERE extname = '''vector''';' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,10 +42,13 @@ services:
       context: ../backend
       dockerfile: ../docker/Dockerfile.backend
     container_name: razgazdayson_backend
+    env_file:
+      - ../backend/.env
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/razgazdayson
       - REDIS_URL=redis://redis:6379/0
-      - ENVIRONMENT=development
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
     ports:
       - "8000:8000"
     volumes:
@@ -80,6 +85,8 @@ services:
       context: ../telegram-bot
       dockerfile: ../docker/Dockerfile.bot
     container_name: razgazdayson_bot
+    env_file:
+      - ../telegram-bot/.env
     environment:
       - API_BASE_URL=http://backend:8000
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/razgazdayson

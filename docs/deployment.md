@@ -250,18 +250,27 @@ Add to crontab:
 
 2. Build new images:
    ```bash
-   docker-compose -f docker/docker-compose.yml build
+   make build
    ```
 
 3. Run migrations:
    ```bash
-   docker-compose -f docker/docker-compose.yml run backend alembic upgrade head
+   make migrate
    ```
 
 4. Restart services:
    ```bash
-   docker-compose -f docker/docker-compose.yml down
-   docker-compose -f docker/docker-compose.yml up -d
+   make restart
+   ```
+
+5. Verify deployment:
+   ```bash
+   make health
+   ```
+
+6. View logs if needed:
+   ```bash
+   make logs
    ```
 
 ## Rollback Procedure
@@ -273,6 +282,10 @@ Add to crontab:
 
 2. Rebuild and restart:
    ```bash
+   make build
+   make restart
+   
+   # Or manually:
    docker-compose -f docker/docker-compose.yml build
    docker-compose -f docker/docker-compose.yml down
    docker-compose -f docker/docker-compose.yml up -d
