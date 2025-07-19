@@ -1,0 +1,68 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          # Navigate to project directory
+          cd /root/razgazdayson
+          
+          # Pull latest changes
+          git pull origin main
+          
+          # Build new Docker images
+          cd docker
+          docker-compose -f docker-compose.production.yml build --no-cache
+          
+          # Stop old containers
+          docker-compose -f docker-compose.production.yml down
+          
+          # Start new containers
+          docker-compose -f docker-compose.production.yml up -d
+          
+          # Clean up old images
+          docker image prune -f
+          
+          # Check services health
+          sleep 10
+          docker-compose -f docker-compose.production.yml ps
+          
+          # Test if frontend is accessible
+          curl -f http://localhost:3000 || exit 1
+          
+          echo "✅ Deployment completed successfully!"
+          
+    - name: Notify deployment status
+      if: always()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const status = '${{ job.status }}' === 'success' ? '✅' : '❌';
+          const message = `Deployment ${status}: ${context.sha.substring(0, 7)} by ${context.actor}`;
+          
+          // You can add Telegram/Discord notification here
+          console.log(message);
