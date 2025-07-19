@@ -131,7 +131,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ../configs/nginx-docker.conf:/etc/nginx/nginx.conf:ro
+      - ../configs/nginx-simple.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - nginx_logs:/var/log/nginx
     networks:
@@ -139,7 +139,6 @@ services:
     depends_on:
       - backend
       - frontend
-      - telegram-webapp
 
 volumes:
   postgres_data:
