@@ -227,6 +227,18 @@ export function useSearchDreams(query: string, enabled = true) {
 }
 
 /**
+ * Hook for dream catalog (mock data for now)
+ */
+export function useDreamCatalog(params: any) {
+  // В реальном приложении это будет API запрос
+  return {
+    data: null,
+    isLoading: false,
+    error: null
+  };
+}
+
+/**
  * Combined dreams hook
  */
 export function useDreamOperations() {
