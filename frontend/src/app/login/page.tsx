@@ -217,7 +217,7 @@ function LoginContent() {
                   </h1>
                 </Link>
                 <p className="text-lg text-text-secondary leading-relaxed">
-                  AI-толкование снов нового поколения
+                  Тайны ваших снов раскрыты
                 </p>
               </div>
 
@@ -239,7 +239,7 @@ function LoginContent() {
                     Войти через Telegram
                   </h2>
                   <p className="text-text-secondary">
-                    Быстро, безопасно, без регистрации
+                    Мудрость веков в расшифровке снов
                   </p>
                 </div>
 
@@ -409,7 +409,7 @@ function LoginContent() {
                 </div>
                 <div className="flex items-center gap-2 text-text-secondary">
                   <div className="w-2 h-2 bg-primary-500 rounded-full" />
-                  <span>AI-аналитика паттернов</span>
+                  <span>Анализ повторяющихся символов</span>
                 </div>
                 <div className="flex items-center gap-2 text-text-secondary">
                   <div className="w-2 h-2 bg-accent-cyan rounded-full" />

@@ -106,21 +106,21 @@ services:
       - redis
     command: python main.py
 
-  # Telegram WebApp
-  telegram-webapp:
-    build:
-      context: ../telegram-webapp
-      dockerfile: ../docker/Dockerfile.webapp
-      args:
-        - REACT_APP_API_URL=https://razgadayson.ru/api/v1
-    container_name: razgazdayson_webapp
-    restart: always
-    environment:
-      - REACT_APP_API_URL=https://razgadayson.ru/api/v1
-    networks:
-      - razgazdayson_network
-    depends_on:
-      - backend
+  # Telegram WebApp - TEMPORARILY DISABLED DUE TO BUILD ISSUES
+  # telegram-webapp:
+  #   build:
+  #     context: ../telegram-webapp
+  #     dockerfile: ../docker/Dockerfile.webapp
+  #     args:
+  #       - REACT_APP_API_URL=https://razgadayson.ru/api/v1
+  #   container_name: razgazdayson_webapp
+  #   restart: always
+  #   environment:
+  #     - REACT_APP_API_URL=https://razgadayson.ru/api/v1
+  #   networks:
+  #     - razgazdayson_network
+  #   depends_on:
+  #     - backend
 
   # Nginx Reverse Proxy
   nginx:

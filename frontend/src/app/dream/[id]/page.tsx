@@ -314,7 +314,7 @@ export default function DreamResultPage() {
 
         {/* Footer Info */}
         <div className="mt-12 text-center text-sm text-mystic-text-muted">
-          <p>AI модель: {interpretation?.ai_model}</p>
+          <p>Система анализа: {interpretation?.ai_model?.replace('gpt', 'Мистический оракул').replace('GPT', 'Мистический оракул')}</p>
           <p>Время обработки: {interpretation?.processing_time_ms}мс</p>
         </div>
       </div>
