@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { QueryProvider } from "@/providers/query-provider";
 import { ToastProvider } from "@/providers/toast-provider";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import "./globals.css";
 
 const inter = Inter({ 
   subsets: ["latin", "cyrillic"],
-  variable: "--font-inter",
+  variable: "--font-sans",
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -39,14 +41,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" className={inter.variable}>
-      <body className="font-sans antialiased">
+    <html lang="ru" className={inter.variable} suppressHydrationWarning>
+      <body className="font-sans antialiased bg-bg-primary text-text-primary transition-smooth">
         <ErrorBoundary>
-          <QueryProvider>
-            <ToastProvider>
-              {children}
-            </ToastProvider>
-          </QueryProvider>
+          <ThemeProvider>
+            <QueryProvider>
+              <ToastProvider>
+                {children}
+              </ToastProvider>
+            </QueryProvider>
+          </ThemeProvider>
         </ErrorBoundary>
       </body>
     </html>

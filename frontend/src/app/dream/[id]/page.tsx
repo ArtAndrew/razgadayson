@@ -274,7 +274,7 @@ export default function DreamResultPage() {
           </Button>
           
           <Button
-            variant="gold"
+            variant="gradient"
             size="lg"
             onClick={handleGenerateTTS}
             disabled={generateTTS.isPending || isPlaying}
@@ -305,7 +305,7 @@ export default function DreamResultPage() {
               <p className="mb-6 text-mystic-text-secondary">
                 Безлимитные толкования, озвучка, глубокий анализ и многое другое
               </p>
-              <Button variant="gold" size="lg" asChild>
+              <Button variant="gradient" size="lg" asChild>
                 <Link href="/subscribe">Попробовать Pro бесплатно</Link>
               </Button>
             </CardContent>

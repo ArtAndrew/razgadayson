@@ -323,7 +323,7 @@ export default function JournalPage() {
                 <Card 
                   key={dream.id} 
                   variant="glass" 
-                  hover
+                  interactive
                   className="animate-fade-in"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
@@ -428,7 +428,7 @@ export default function JournalPage() {
             Отмена
           </Button>
           <Button
-            variant="danger"
+            variant="destructive"
             onClick={() => deleteModal.dreamId && handleDelete(deleteModal.dreamId)}
             isLoading={deleteDream.isPending}
           >

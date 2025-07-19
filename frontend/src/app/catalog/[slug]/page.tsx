@@ -328,7 +328,7 @@ export default async function SymbolDetailPage({ params }: PageProps) {
               <p className="text-lg text-mystic-text-secondary mb-6">
                 Получите персональное AI-толкование с учетом всех деталей
               </p>
-              <Button variant="gold" size="lg" asChild>
+              <Button variant="gradient" size="lg" asChild>
                 <Link href="/">Разгадать свой сон</Link>
               </Button>
             </Card>

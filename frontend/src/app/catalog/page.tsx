@@ -190,7 +190,7 @@ function CatalogContent() {
                     className="group animate-scale-in"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    <Card variant="glass" hover className="h-full">
+                    <Card variant="glass" interactive className="h-full">
                       <CardContent className="text-center pt-8 pb-6">
                         <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">
                           {symbol.emoji}
@@ -310,7 +310,7 @@ function CatalogContent() {
             <p className="text-lg text-mystic-text-secondary mb-6">
               Получите персональное AI-толкование за 30 секунд
             </p>
-            <Button variant="gold" size="lg" asChild>
+            <Button variant="gradient" size="lg" asChild>
               <Link href="/">Разгадать сон</Link>
             </Button>
           </Card>
