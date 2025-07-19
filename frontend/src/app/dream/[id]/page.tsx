@@ -1,19 +1,3 @@
-// ai_context_v3
-/**
- * 🎯 main_goal: Страница отображения результата интерпретации сна
- * ⚡ critical_requirements:
- *   - Показ интерпретации с символами и эмоциями
- *   - Кнопки сохранения и шаринга
- *   - Генерация TTS для Pro пользователей
- * 📥 inputs_outputs: Dream ID -> Interpretation display
- * 🔧 functions_list:
- *   - DreamResultPage: Основной компонент страницы
- *   - showInterpretation: Отображение интерпретации
- *   - handleTTS: Генерация озвучки
- * 🚫 forbidden_changes: Не показывать Pro функции бесплатным пользователям
- * 🧪 tests: Проверка отображения всех элементов
- */
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -22,6 +6,11 @@ import Link from 'next/link';
 import { useDream, useGenerateTTS } from '@/hooks/useDreams';
 import { useAuth } from '@/hooks/useAuth';
 import type { DreamInterpretResponse } from '@/types/dream';
+import { toast } from '@/components/ui/Toast';
+import Header from '@/components/layout/Header';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import Skeleton, { SkeletonText, SkeletonCard } from '@/components/ui/Skeleton';
 
 export default function DreamResultPage() {
   const params = useParams();
@@ -68,7 +57,7 @@ export default function DreamResultPage() {
       } else {
         // Fallback - copy to clipboard
         await navigator.clipboard.writeText(shareData.url);
-        alert('Ссылка скопирована в буфер обмена');
+        toast.success('Ссылка скопирована в буфер обмена');
       }
     } catch (error) {
       console.error('Error sharing:', error);
@@ -77,7 +66,7 @@ export default function DreamResultPage() {
 
   const handleGenerateTTS = async () => {
     if (!user || user.subscription_type === 'free') {
-      alert('Озвучка доступна только для Pro пользователей');
+      toast.warning('Озвучка доступна только для Pro пользователей');
       router.push('/subscribe');
       return;
     }
@@ -103,16 +92,23 @@ export default function DreamResultPage() {
       
       audio.onended = () => setIsPlaying(false);
     } catch (error: any) {
-      alert(error.message || 'Ошибка генерации озвучки');
+      toast.error(error.message || 'Ошибка генерации озвучки');
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="mb-4 h-16 w-16 animate-spin rounded-full border-4 border-purple-600 border-t-transparent"></div>
-          <p className="text-gray-600">Загружаем интерпретацию...</p>
+      <div className="min-h-screen">
+        <Header />
+        <div className="container mx-auto max-w-4xl px-4 pt-24">
+          {/* Loading State */}
+          <div className="mb-8">
+            <Skeleton variant="rounded" height={200} className="w-full" />
+          </div>
+          <SkeletonCard />
+          <div className="mt-6">
+            <SkeletonText lines={5} />
+          </div>
         </div>
       </div>
     );
@@ -120,154 +116,204 @@ export default function DreamResultPage() {
 
   if (error || (!dream && !sessionInterpretation)) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <h1 className="mb-4 text-2xl font-bold text-gray-900">Интерпретация не найдена</h1>
-          <p className="mb-6 text-gray-600">Возможно, ссылка устарела или сон был удален</p>
-          <Link
-            href="/"
-            className="rounded-lg bg-purple-600 px-6 py-3 text-white hover:bg-purple-700"
-          >
-            Вернуться на главную
-          </Link>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Header />
+        <Card variant="glass" className="text-center max-w-md">
+          <CardContent className="pt-6">
+            <div className="mb-4 text-6xl">😔</div>
+            <h1 className="mb-4 text-2xl font-bold text-white">Интерпретация не найдена</h1>
+            <p className="mb-6 text-mystic-text-muted">
+              Возможно, ссылка устарела или сон был удален
+            </p>
+            <Button variant="primary" asChild>
+              <Link href="/">Вернуться на главную</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-10">
-      <div className="container mx-auto max-w-4xl px-4">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <Link href="/" className="text-purple-600 hover:text-purple-700">
-            ← Вернуться на главную
-          </Link>
-        </div>
+    <div className="min-h-screen">
+      <Header />
+      
+      {/* Background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-40 left-10 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-20 right-10 w-80 h-80 bg-accent-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
+      </div>
 
+      <div className="container relative mx-auto max-w-4xl px-4 pt-24 pb-12">
         {/* Main Symbol Card */}
-        <div className="mb-8 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 p-8 text-center text-white shadow-xl">
-          <div className="mb-4 text-6xl">{interpretation?.main_symbol_emoji}</div>
-          <h1 className="mb-2 text-3xl font-bold">{interpretation?.main_symbol}</h1>
-          <p className="text-lg opacity-90">Главный символ вашего сна</p>
-        </div>
+        <Card variant="gradient" className="mb-8 text-center overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-600/20 to-accent-600/20" />
+          <CardContent className="relative z-10 py-12">
+            <div className="mb-6 text-8xl animate-float">{interpretation?.main_symbol_emoji}</div>
+            <h1 className="mb-3 text-4xl font-bold text-white font-display">
+              {interpretation?.main_symbol}
+            </h1>
+            <p className="text-xl text-mystic-text-secondary">
+              Главный символ вашего сна
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Interpretation */}
-        <div className="mb-8 rounded-lg bg-white p-6 shadow-lg">
-          <h2 className="mb-4 text-2xl font-bold">Толкование</h2>
-          <p className="whitespace-pre-wrap text-gray-700">{interpretation?.interpretation}</p>
-        </div>
+        <Card variant="glass" className="mb-8 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <span className="text-3xl">📜</span>
+              Толкование
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="whitespace-pre-wrap text-mystic-text-secondary leading-relaxed">
+              {interpretation?.interpretation}
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Emotions */}
         {interpretation?.emotions && interpretation.emotions.length > 0 && (
-          <div className="mb-8 rounded-lg bg-white p-6 shadow-lg">
-            <h2 className="mb-4 text-2xl font-bold">Эмоции во сне</h2>
-            <div className="space-y-3">
-              {interpretation.emotions.map((emotion, index) => (
-                <div key={index} className="border-l-4 border-purple-500 bg-gray-50 p-4">
-                  <div className="mb-1 flex items-center justify-between">
-                    <h3 className="font-semibold">{emotion.name}</h3>
-                    <span className={`rounded-full px-3 py-1 text-sm ${
-                      emotion.intensity === 'высокая' ? 'bg-red-100 text-red-700' :
-                      emotion.intensity === 'средняя' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-green-100 text-green-700'
-                    }`}>
-                      {emotion.intensity}
-                    </span>
+          <Card variant="glass" className="mb-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-3xl">💭</span>
+                Эмоции во сне
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {interpretation.emotions.map((emotion, index) => (
+                  <div 
+                    key={index} 
+                    className="glass rounded-lg p-4 border-l-4"
+                    style={{
+                      borderColor: emotion.intensity === 'высокая' ? '#ef4444' :
+                                  emotion.intensity === 'средняя' ? '#f59e0b' : '#10b981'
+                    }}
+                  >
+                    <div className="mb-2 flex items-center justify-between">
+                      <h3 className="font-semibold text-white">{emotion.name}</h3>
+                      <span className={`rounded-full px-3 py-1 text-sm font-medium ${
+                        emotion.intensity === 'высокая' ? 'bg-red-500/20 text-red-400' :
+                        emotion.intensity === 'средняя' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-green-500/20 text-green-400'
+                      }`}>
+                        {emotion.intensity}
+                      </span>
+                    </div>
+                    <p className="text-mystic-text-muted">{emotion.meaning}</p>
                   </div>
-                  <p className="text-gray-600">{emotion.meaning}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Advice */}
         {interpretation?.advice && (
-          <div className="mb-8 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 p-6 shadow-lg">
-            <h2 className="mb-4 text-2xl font-bold">Совет</h2>
-            <p className="text-gray-700">{interpretation.advice}</p>
-          </div>
+          <Card variant="glass" glow className="mb-8 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-3xl">✨</span>
+                Совет
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-mystic-text-secondary">{interpretation.advice}</p>
+            </CardContent>
+          </Card>
         )}
 
         {/* Similar Dreams */}
         {similarDreams.length > 0 && (
-          <div className="mb-8 rounded-lg bg-white p-6 shadow-lg">
-            <h2 className="mb-4 text-2xl font-bold">Похожие сны</h2>
-            <div className="space-y-3">
-              {similarDreams.map((similar) => (
-                <Link
-                  key={similar.id}
-                  href={`/dream/${similar.id}`}
-                  className="block rounded-lg border border-gray-200 p-4 hover:border-purple-300 hover:bg-purple-50"
-                >
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="font-semibold">{similar.main_symbol}</span>
-                    <span className="text-sm text-gray-500">
-                      Сходство: {Math.round(similar.similarity * 100)}%
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">{similar.text}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
+          <Card variant="glass" className="mb-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-3xl">🔗</span>
+                Похожие сны
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {similarDreams.map((similar) => (
+                  <Link
+                    key={similar.id}
+                    href={`/dream/${similar.id}`}
+                    className="block glass rounded-lg p-4 hover:bg-white/10 transition-all duration-200"
+                  >
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="font-semibold text-white">{similar.main_symbol}</span>
+                      <span className="text-sm text-mystic-text-muted">
+                        Сходство: {Math.round(similar.similarity * 100)}%
+                      </span>
+                    </div>
+                    <p className="text-sm text-mystic-text-muted line-clamp-2">{similar.text}</p>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Actions */}
-        <div className="flex flex-wrap gap-4">
-          <button
+        <div className="flex flex-wrap gap-4 mb-8">
+          <Button
+            variant="secondary"
+            size="lg"
             onClick={handleShare}
-            className="flex-1 rounded-lg border border-purple-600 bg-white px-6 py-3 font-semibold text-purple-600 hover:bg-purple-50 sm:flex-none"
+            leftIcon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a3 3 0 10-5.732-1.684m5.732 1.684a3 3 0 01-5.732 1.684m0-9.368a3 3 0 105.732-1.684m-5.732 1.684m5.732-1.684m-5.732 1.684M12 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            }
           >
             Поделиться
-          </button>
+          </Button>
           
-          <button
+          <Button
+            variant="gold"
+            size="lg"
             onClick={handleGenerateTTS}
             disabled={generateTTS.isPending || isPlaying}
-            className="flex-1 rounded-lg bg-purple-600 px-6 py-3 font-semibold text-white hover:bg-purple-700 disabled:opacity-50 sm:flex-none"
+            isLoading={generateTTS.isPending}
+            leftIcon={<span>🔊</span>}
           >
-            {generateTTS.isPending ? 'Генерируем...' : 
-             isPlaying ? 'Воспроизводится...' : 
-             '🔊 Озвучить'}
-          </button>
+            {isPlaying ? 'Воспроизводится...' : 'Озвучить'}
+          </Button>
 
           {user ? (
-            <Link
-              href="/profile/dreams"
-              className="flex-1 rounded-lg bg-gray-600 px-6 py-3 text-center font-semibold text-white hover:bg-gray-700 sm:flex-none"
-            >
-              Мои сны
-            </Link>
+            <Button variant="primary" size="lg" asChild>
+              <Link href="/journal">Мой журнал снов</Link>
+            </Button>
           ) : (
-            <Link
-              href="/login"
-              className="flex-1 rounded-lg bg-gray-600 px-6 py-3 text-center font-semibold text-white hover:bg-gray-700 sm:flex-none"
-            >
-              Войти
-            </Link>
+            <Button variant="primary" size="lg" asChild>
+              <Link href="/login">Войти в аккаунт</Link>
+            </Button>
           )}
         </div>
 
         {/* Pro Features Hint */}
         {(!user || user.subscription_type === 'free') && (
-          <div className="mt-8 rounded-lg bg-purple-50 p-6 text-center">
-            <h3 className="mb-2 text-lg font-semibold">Откройте больше возможностей с Pro</h3>
-            <p className="mb-4 text-gray-600">
-              Безлимитные толкования, озвучка, глубокий анализ и многое другое
-            </p>
-            <Link
-              href="/subscribe"
-              className="inline-block rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700"
-            >
-              Попробовать Pro бесплатно
-            </Link>
-          </div>
+          <Card variant="gradient" className="text-center animate-fade-in" style={{ animationDelay: '0.5s' }}>
+            <CardContent className="py-8">
+              <h3 className="mb-3 text-2xl font-bold text-white font-display">
+                Откройте больше возможностей с Pro
+              </h3>
+              <p className="mb-6 text-mystic-text-secondary">
+                Безлимитные толкования, озвучка, глубокий анализ и многое другое
+              </p>
+              <Button variant="gold" size="lg" asChild>
+                <Link href="/subscribe">Попробовать Pro бесплатно</Link>
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         {/* Footer Info */}
-        <div className="mt-12 text-center text-sm text-gray-500">
+        <div className="mt-12 text-center text-sm text-mystic-text-muted">
           <p>AI модель: {interpretation?.ai_model}</p>
           <p>Время обработки: {interpretation?.processing_time_ms}мс</p>
         </div>

@@ -5,6 +5,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useInterpretDream } from "@/hooks/useDreams";
 import { dreamService } from "@/lib/api";
+import { toast } from "@/components/ui/Toast";
+import Header from "@/components/layout/Header";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
+import { Textarea } from "@/components/ui/Input";
 
 export default function Home() {
   const [dreamText, setDreamText] = useState("");
@@ -19,7 +24,7 @@ export default function Home() {
     // Validate dream text
     const validation = dreamService.validateDreamText(dreamText);
     if (!validation.valid) {
-      alert(validation.error);
+      toast.error(validation.error || 'Текст сна не соответствует требованиям');
       return;
     }
 
@@ -44,90 +49,142 @@ export default function Home() {
         router.push('/login?reason=interpretation');
       } else if (error.statusCode === 429) {
         // Rate limit exceeded
-        alert('Вы превысили дневной лимит толкований. Оформите подписку Pro для безлимитного доступа.');
+        toast.warning('Вы превысили дневной лимит толкований. Оформите подписку Pro для безлимитного доступа.');
       } else {
         // General error
-        alert(error.message || 'Произошла ошибка при интерпретации сна');
+        toast.error(error.message || 'Произошла ошибка при интерпретации сна');
       }
     }
   };
 
   const handleVoiceInput = () => {
-    // TODO: Implement voice recording
     setIsRecording(!isRecording);
-    alert('Голосовой ввод будет доступен в следующей версии');
+    toast.info('Голосовой ввод будет доступен в ближайшее время');
   };
+
+  const features = [
+    {
+      icon: "✨",
+      title: "Глубинный анализ",
+      description: "AI анализирует символы, эмоции и скрытые значения вашего сна"
+    },
+    {
+      icon: "🔮",
+      title: "Мгновенный результат",
+      description: "Получите детальное толкование всего за 30 секунд"
+    },
+    {
+      icon: "📚",
+      title: "База знаний",
+      description: "Опирается на психологию, мифологию и культурные традиции"
+    },
+    {
+      icon: "🌟",
+      title: "Персонализация",
+      description: "Учитывает ваш контекст и историю для точных интерпретаций"
+    }
+  ];
+
+  const popularSymbols = [
+    { name: "Вода", emoji: "💧", description: "Эмоции и подсознание" },
+    { name: "Полет", emoji: "🦅", description: "Свобода и амбиции" },
+    { name: "Падение", emoji: "📉", description: "Потеря контроля" },
+    { name: "Змея", emoji: "🐍", description: "Трансформация" },
+    { name: "Деньги", emoji: "💰", description: "Ценности и успех" },
+    { name: "Огонь", emoji: "🔥", description: "Страсть и энергия" },
+    { name: "Дом", emoji: "🏠", description: "Безопасность и семья" },
+    { name: "Море", emoji: "🌊", description: "Бессознательное" }
+  ];
+
+  const stats = [
+    { value: "100K+", label: "Пользователей" },
+    { value: "500K+", label: "Толкований" },
+    { value: "98%", label: "Точность" },
+    { value: "4.9★", label: "Рейтинг" }
+  ];
 
   return (
     <div className="min-h-screen">
+      <Header />
+      
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 py-20 text-white">
-        <div className="absolute inset-0 bg-black/20"></div>
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary-500/20 rounded-full blur-3xl animate-float" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent-500/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-gold-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }} />
+        </div>
+        
         <div className="container relative mx-auto px-4">
           <div className="mx-auto max-w-4xl text-center">
-            <h1 className="mb-6 text-5xl font-bold md:text-7xl">
-              Разгадай Сон
+            <h1 className="mb-6 text-5xl font-bold md:text-7xl text-white font-display animate-fade-in">
+              <span className="text-gradient">Разгадай Сон</span>
             </h1>
-            <p className="mb-8 text-xl md:text-2xl">
-              AI-толкование снов за 30 секунд
+            <p className="mb-8 text-xl md:text-2xl text-mystic-text-secondary animate-slide-up">
+              AI-толкование снов с глубинным анализом символов
             </p>
-            <p className="mb-10 text-lg opacity-90">
-              Введите описание своего сна и получите мгновенную интерпретацию от искусственного интеллекта
+            <p className="mb-10 text-lg text-mystic-text-muted animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              Откройте тайны своего подсознания с помощью нейросети GPT-4
             </p>
             
             {/* Quick Dream Input */}
-            <div className="mx-auto max-w-2xl">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="relative">
-                  <textarea
+            <div className="mx-auto max-w-2xl animate-scale-in" style={{ animationDelay: '0.4s' }}>
+              <Card variant="glass" glow className="p-8">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <Textarea
                     value={dreamText}
                     onChange={(e) => setDreamText(e.target.value)}
-                    placeholder="Опишите свой сон..."
-                    className="w-full rounded-lg bg-white/10 p-4 pr-12 text-white placeholder-white/70 backdrop-blur-sm focus:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
-                    rows={4}
-                    minLength={20}
-                    maxLength={4000}
-                    required
+                    label="Опишите свой сон"
+                    placeholder="Я видел во сне..."
+                    rows={5}
+                    className="min-h-[150px]"
                   />
-                  <button
-                    type="button"
-                    onClick={handleVoiceInput}
-                    className="absolute bottom-4 right-4 rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white"
-                    title="Голосовой ввод"
-                  >
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                    </svg>
-                  </button>
-                </div>
-                
-                <div className="text-sm text-white/70">
-                  {dreamText.length}/4000 символов (минимум 20)
-                </div>
-                
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <button
-                    type="submit"
-                    disabled={dreamText.length < 20 || interpretDream.isPending}
-                    className="flex-1 rounded-lg bg-white px-6 py-3 font-semibold text-purple-600 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {interpretDream.isPending ? 'Анализируем...' : 'Разгадать сон'}
-                  </button>
-                  <Link
-                    href="https://t.me/razgazdayson_bot"
-                    className="flex-1 rounded-lg border-2 border-white px-6 py-3 text-center font-semibold transition hover:bg-white hover:text-purple-600"
-                  >
-                    Открыть в Telegram
-                  </Link>
-                </div>
-              </form>
-              
-              {/* Error display */}
-              {interpretDream.error && (
-                <div className="mt-4 rounded-lg bg-red-500/20 p-4 text-white">
-                  {interpretDream.error.message}
-                </div>
-              )}
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-mystic-text-muted">
+                      {dreamText.length}/4000 символов
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleVoiceInput}
+                      title="Голосовой ввод"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                      </svg>
+                    </Button>
+                  </div>
+                  
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="lg"
+                      className="flex-1"
+                      disabled={dreamText.length < 20 || interpretDream.isPending}
+                      isLoading={interpretDream.isPending}
+                    >
+                      {interpretDream.isPending ? 'Анализируем сон...' : 'Разгадать сон'}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="lg"
+                      className="flex-1"
+                      asChild
+                    >
+                      <Link href="https://t.me/razgazdayson_bot">
+                        <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.56c-.21 2.27-1.12 7.79-1.58 10.34-.2 1.08-.58 1.44-.95 1.48-.81.08-1.43-.54-2.22-1.05-1.23-.81-1.93-1.31-3.12-2.1-1.38-.91-.49-1.41.3-2.23.21-.21 3.82-3.5 3.89-3.8.01-.04.01-.19-.07-.27-.08-.08-.2-.05-.28-.03-.12.03-2.02 1.28-5.7 3.76-.54.37-1.03.55-1.47.54-.48-.01-1.41-.27-2.1-.5-.85-.28-1.52-.43-1.46-.91.03-.25.37-.51 1.01-.78 3.96-1.73 6.6-2.86 7.92-3.41 3.77-1.56 4.56-1.83 5.07-1.84.11 0 .37.03.53.18.14.12.18.28.2.46-.01.06.01.24 0 .38z"/>
+                        </svg>
+                        Telegram Bot
+                      </Link>
+                    </Button>
+                  </div>
+                </form>
+              </Card>
             </div>
           </div>
         </div>
@@ -136,71 +193,65 @@ export default function Home() {
       {/* Features Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-4xl font-bold">
+          <h2 className="mb-4 text-center text-4xl font-bold text-white font-display">
             Как это работает
           </h2>
-          <div className="grid gap-8 md:grid-cols-3">
-            <div className="rounded-lg bg-white p-6 shadow-lg">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600">
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Опишите сон</h3>
-              <p className="text-gray-600">
-                Введите текст или надиктуйте голосом описание вашего сна
-              </p>
-            </div>
-            <div className="rounded-lg bg-white p-6 shadow-lg">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600">
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">AI анализ</h3>
-              <p className="text-gray-600">
-                GPT-4 анализирует символы, эмоции и скрытые значения
-              </p>
-            </div>
-            <div className="rounded-lg bg-white p-6 shadow-lg">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600">
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Получите толкование</h3>
-              <p className="text-gray-600">
-                Мгновенная расшифровка с советами и рекомендациями
-              </p>
-            </div>
+          <p className="mb-12 text-center text-lg text-mystic-text-muted">
+            Передовые технологии для глубокого понимания ваших снов
+          </p>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {features.map((feature, index) => (
+              <Card
+                key={index}
+                variant="glass"
+                hover
+                className="text-center animate-scale-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <CardContent className="pt-6">
+                  <div className="mb-4 text-5xl">{feature.icon}</div>
+                  <h3 className="mb-2 text-xl font-semibold text-white">
+                    {feature.title}
+                  </h3>
+                  <p className="text-mystic-text-muted">
+                    {feature.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Popular Dreams Section */}
-      <section className="bg-gray-50 py-20">
+      {/* Popular Symbols Section */}
+      <section className="py-20">
         <div className="container mx-auto px-4">
-          <h2 className="mb-12 text-center text-4xl font-bold">
-            Популярные символы
+          <h2 className="mb-4 text-center text-4xl font-bold text-white font-display">
+            Популярные символы снов
           </h2>
+          <p className="mb-12 text-center text-lg text-mystic-text-muted">
+            Исследуйте значения самых распространенных символов
+          </p>
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {[
-              { name: "Вода", emoji: "💧" },
-              { name: "Полет", emoji: "🦅" },
-              { name: "Падение", emoji: "📉" },
-              { name: "Змея", emoji: "🐍" },
-              { name: "Деньги", emoji: "💰" },
-              { name: "Смерть", emoji: "💀" },
-              { name: "Беременность", emoji: "🤰" },
-              { name: "Свадьба", emoji: "💒" }
-            ].map((symbol) => (
+            {popularSymbols.map((symbol) => (
               <Link
                 key={symbol.name}
                 href={`/catalog/${symbol.name.toLowerCase()}`}
-                className="group rounded-lg bg-white p-4 text-center shadow transition hover:shadow-lg"
+                className="group"
               >
-                <div className="mb-2 text-3xl">{symbol.emoji}</div>
-                <span className="text-lg font-medium group-hover:text-purple-600">{symbol.name}</span>
+                <Card variant="solid" hover className="text-center">
+                  <CardContent className="pt-6">
+                    <div className="mb-3 text-4xl group-hover:scale-110 transition-transform">
+                      {symbol.emoji}
+                    </div>
+                    <h3 className="text-lg font-semibold text-white group-hover:text-primary-400 transition-colors">
+                      {symbol.name}
+                    </h3>
+                    <p className="text-sm text-mystic-text-muted mt-1">
+                      {symbol.description}
+                    </p>
+                  </CardContent>
+                </Card>
               </Link>
             ))}
           </div>
@@ -210,88 +261,95 @@ export default function Home() {
       {/* Stats Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="grid gap-8 text-center md:grid-cols-4">
-            <div>
-              <div className="mb-2 text-4xl font-bold text-purple-600">100K+</div>
-              <div className="text-gray-600">Пользователей</div>
+          <Card variant="gradient" className="p-12">
+            <div className="grid gap-8 text-center md:grid-cols-4">
+              {stats.map((stat, index) => (
+                <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <div className="mb-2 text-4xl font-bold text-white">
+                    {stat.value}
+                  </div>
+                  <div className="text-mystic-text-secondary">
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div>
-              <div className="mb-2 text-4xl font-bold text-purple-600">500K+</div>
-              <div className="text-gray-600">Разгаданных снов</div>
-            </div>
-            <div>
-              <div className="mb-2 text-4xl font-bold text-purple-600">30 сек</div>
-              <div className="text-gray-600">Время анализа</div>
-            </div>
-            <div>
-              <div className="mb-2 text-4xl font-bold text-purple-600">4.8★</div>
-              <div className="text-gray-600">Рейтинг</div>
-            </div>
-          </div>
+          </Card>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-r from-purple-600 to-pink-600 py-20 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="mb-6 text-4xl font-bold">
-            Начните разгадывать сны прямо сейчас
-          </h2>
-          <p className="mb-8 text-xl">
-            Получите глубокое понимание своего подсознания с помощью AI
-          </p>
-          <div className="flex flex-col justify-center gap-4 sm:flex-row">
-            <Link
-              href="https://t.me/razgazdayson_bot"
-              className="rounded-lg bg-white px-8 py-3 font-semibold text-purple-600 transition hover:bg-gray-100"
-            >
-              Telegram Bot
-            </Link>
-            <Link
-              href="/register"
-              className="rounded-lg border-2 border-white px-8 py-3 font-semibold transition hover:bg-white hover:text-purple-600"
-            >
-              Создать аккаунт
-            </Link>
-          </div>
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <Card variant="glass" glow className="text-center p-12">
+            <h2 className="mb-6 text-4xl font-bold text-white font-display">
+              Начните разгадывать сны прямо сейчас
+            </h2>
+            <p className="mb-8 text-xl text-mystic-text-secondary">
+              Откройте двери в мир своего подсознания
+            </p>
+            <div className="flex flex-col justify-center gap-4 sm:flex-row">
+              <Button variant="gold" size="lg" asChild>
+                <Link href="/register">
+                  Создать аккаунт Pro
+                </Link>
+              </Button>
+              <Button variant="secondary" size="lg" asChild>
+                <Link href="https://t.me/razgazdayson_bot">
+                  Попробовать в Telegram
+                </Link>
+              </Button>
+            </div>
+          </Card>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 py-10 text-white">
-        <div className="container mx-auto px-4">
+      {/* Premium Footer */}
+      <footer className="relative py-16 mt-20">
+        <div className="absolute inset-0 glass" />
+        <div className="container relative mx-auto px-4">
           <div className="grid gap-8 md:grid-cols-4">
             <div>
-              <h3 className="mb-4 text-xl font-bold">Разгадай Сон</h3>
-              <p className="text-gray-400">
-                AI-толкование снов для современного мира
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-10 h-10 rounded-full bg-gradient-mystic flex items-center justify-center">
+                  <span className="text-white text-xl">🌙</span>
+                </div>
+                <span className="text-xl font-bold text-white font-display">
+                  Разгадай Сон
+                </span>
+              </div>
+              <p className="text-mystic-text-muted">
+                AI-толкование снов нового поколения
               </p>
             </div>
             <div>
-              <h4 className="mb-4 font-semibold">Продукт</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link href="/about" className="hover:text-white">О проекте</Link></li>
-                <li><Link href="/catalog" className="hover:text-white">Каталог снов</Link></li>
-                <li><Link href="/faq" className="hover:text-white">FAQ</Link></li>
+              <h4 className="mb-4 font-semibold text-white">Продукт</h4>
+              <ul className="space-y-2 text-mystic-text-muted">
+                <li><Link href="/about" className="hover:text-white transition-colors">О проекте</Link></li>
+                <li><Link href="/catalog" className="hover:text-white transition-colors">Каталог снов</Link></li>
+                <li><Link href="/journal" className="hover:text-white transition-colors">Журнал снов</Link></li>
+                <li><Link href="/pricing" className="hover:text-white transition-colors">Тарифы</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="mb-4 font-semibold">Поддержка</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link href="/help" className="hover:text-white">Помощь</Link></li>
-                <li><a href="mailto:support@razgazdayson.ru" className="hover:text-white">support@razgazdayson.ru</a></li>
+              <h4 className="mb-4 font-semibold text-white">Поддержка</h4>
+              <ul className="space-y-2 text-mystic-text-muted">
+                <li><Link href="/help" className="hover:text-white transition-colors">Центр помощи</Link></li>
+                <li><Link href="/faq" className="hover:text-white transition-colors">Частые вопросы</Link></li>
+                <li><a href="mailto:support@razgazdayson.ru" className="hover:text-white transition-colors">support@razgazdayson.ru</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="mb-4 font-semibold">Правовая информация</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link href="/privacy" className="hover:text-white">Политика конфиденциальности</Link></li>
-                <li><Link href="/terms" className="hover:text-white">Пользовательское соглашение</Link></li>
+              <h4 className="mb-4 font-semibold text-white">Правовая информация</h4>
+              <ul className="space-y-2 text-mystic-text-muted">
+                <li><Link href="/privacy" className="hover:text-white transition-colors">Конфиденциальность</Link></li>
+                <li><Link href="/terms" className="hover:text-white transition-colors">Условия использования</Link></li>
+                <li><Link href="/cookies" className="hover:text-white transition-colors">Cookie Policy</Link></li>
               </ul>
             </div>
           </div>
-          <div className="mt-8 border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Разгадай Сон. Все права защищены.</p>
+          <div className="mt-12 pt-8 border-t border-white/10 text-center text-mystic-text-muted">
+            <p>&copy; 2025 Разгадай Сон. Все права защищены.</p>
           </div>
         </div>
       </footer>
