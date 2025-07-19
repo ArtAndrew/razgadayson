@@ -13,6 +13,7 @@
 
 from datetime import datetime
 from typing import TYPE_CHECKING
+from uuid import UUID as PythonUUID
 
 from sqlalchemy import CheckConstraint, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
@@ -29,7 +30,7 @@ class Subscription(Base):
     __tablename__ = "subscriptions"
     
     # Columns
-    user_id: Mapped[UUID] = mapped_column(
+    user_id: Mapped[PythonUUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,

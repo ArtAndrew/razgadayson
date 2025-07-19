@@ -12,7 +12,7 @@
 """
 
 from datetime import datetime
-from uuid import uuid4
+from uuid import UUID as PythonUUID, uuid4
 
 from sqlalchemy import DateTime, func
 from sqlalchemy.dialects.postgresql import UUID
@@ -28,7 +28,7 @@ class Base(DeclarativeBase):
         """Generate table name from class name"""
         return cls.__name__.lower() + "s"
     
-    id: Mapped[UUID] = mapped_column(
+    id: Mapped[PythonUUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid4,

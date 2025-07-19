@@ -12,6 +12,7 @@
 """
 
 from typing import TYPE_CHECKING, List
+from uuid import UUID as PythonUUID
 
 from sqlalchemy import ForeignKey, String, JSON
 from sqlalchemy.dialects.postgresql import UUID
@@ -30,7 +31,7 @@ class DreamEmbedding(Base):
     __table_args__ = {"schema": "vector_store"}
     
     # Columns
-    dream_id: Mapped[UUID] = mapped_column(
+    dream_id: Mapped[PythonUUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("public.dreams.id", ondelete="CASCADE"),
         nullable=False,
