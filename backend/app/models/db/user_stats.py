@@ -13,30 +13,27 @@
 
 from datetime import date, datetime
 from typing import TYPE_CHECKING
-from uuid import UUID as PythonUUID
+from uuid import UUID
 
 from sqlalchemy import Date, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from sqlalchemy.orm import DeclarativeBase
-
-class StatsBase(DeclarativeBase):
-    """Base without id field for stats models"""
-    pass
+from .base import Base
 
 if TYPE_CHECKING:
     from .user import User
 
 
-class UserStats(StatsBase):
+class UserStats(Base):
     """User statistics model for database"""
     __tablename__ = "user_stats"
     
     # Override primary key - use user_id as primary key
+    __table_args__ = {'extend_existing': True}
     
     # Columns
-    user_id: Mapped[PythonUUID] = mapped_column(
+    user_id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True

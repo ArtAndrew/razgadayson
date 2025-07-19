@@ -12,7 +12,7 @@
 """
 
 from typing import List, TYPE_CHECKING
-from uuid import UUID as PythonUUID
+from uuid import UUID
 from datetime import datetime
 
 from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Integer, String, Text, JSON
@@ -31,7 +31,7 @@ class Dream(Base):
     __tablename__ = "dreams"
     
     # Columns
-    user_id: Mapped[PythonUUID] = mapped_column(
+    user_id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
@@ -88,13 +88,8 @@ class DreamInterpretation(Base):
     """Dream interpretation model for database"""
     __tablename__ = "dream_interpretations"
     
-    # Override table name generation
-    @property
-    def __tablename__(self):
-        return "dream_interpretations"
-    
     # Columns
-    dream_id: Mapped[PythonUUID] = mapped_column(
+    dream_id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("dreams.id", ondelete="CASCADE"),
         nullable=False,
@@ -134,7 +129,7 @@ class DreamTag(Base):
     __tablename__ = "dream_tags"
     
     # Columns
-    dream_id: Mapped[PythonUUID] = mapped_column(
+    dream_id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("dreams.id", ondelete="CASCADE"),
         nullable=False,

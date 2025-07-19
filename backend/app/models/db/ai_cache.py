@@ -13,7 +13,7 @@
 
 from datetime import datetime, timedelta
 
-from sqlalchemy import String, JSON
+from sqlalchemy import String, JSON, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -43,7 +43,7 @@ class AIResponseCache(Base):
     
     # Unique constraint on prompt_hash + model
     __table_args__ = (
-        {"unique_constraint": ("prompt_hash", "model")},
+        UniqueConstraint("prompt_hash", "model", name="uq_prompt_hash_model"),
     )
     
     @property

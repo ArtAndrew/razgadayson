@@ -7,15 +7,14 @@
 ### ✅ Работающие сервисы:
 - **PostgreSQL** (pgvector/pgvector:pg16) - статус: healthy
 - **Redis** (redis:7-alpine) - статус: healthy
-- **Frontend** (Next.js) - работает, доступен по внутреннему IP
+- **Frontend** (Next.js) - работает, доступен через nginx
   - Главная страница отображается корректно
   - SEO-оптимизированная структура
   - Готовы формы ввода сна
-
-### ⚠️ Сервисы с проблемами:
-- **Backend** (FastAPI) - перезапускается из-за ошибок SQLAlchemy
-  - Проблема с наследованием моделей и UUID типами
-  - Требуется дополнительная отладка структуры моделей
+- **Backend** (FastAPI) - работает стабильно ✅
+  - Все проблемы с SQLAlchemy UUID типами исправлены
+  - API доступен через nginx
+  - Health check работает корректно
   
 - **Telegram WebApp** - не собирается из-за конфликта зависимостей
   - Ошибка: `Cannot find module 'ajv/dist/compile/codegen'`
@@ -23,24 +22,48 @@
 
 - **Telegram Bot** - не запущен (зависит от backend)
 
-- **Nginx** - не запущен (зависит от telegram-webapp в текущей конфигурации)
+### ⚠️ Сервисы с проблемами:
+- **Telegram WebApp** - не собирается из-за конфликта зависимостей
+  - Ошибка: `Cannot find module 'ajv/dist/compile/codegen'`
+  - Требуется обновление зависимостей или downgrade react-scripts
 
-## Выполненные исправления
+- **Telegram Bot** - не запущен (зависит от backend)
 
-1. **Добавлены недостающие зависимости:**
-   - `prometheus-fastapi-instrumentator==6.1.0` в backend/requirements.txt
+- **Nginx** - работает частично ✅
+  - Обслуживает frontend и backend
+  - Telegram WebApp не подключен из-за ошибок сборки
 
-2. **Исправлены типы UUID в моделях:**
-   - Изменено с `Mapped[UUID]` на `Mapped[PythonUUID]` во всех моделях
-   - Обновлены импорты для корректной работы с UUID
+## Выполненные исправления (19.07.2025)
 
-3. **Обновлены конфигурации:**
-   - Изменен пароль PostgreSQL на безопасный без специальных символов
-   - Обновлены все .env файлы
-   - Добавлен docker/.env для переменных окружения
+### Исправления проблем с SQLAlchemy UUID типами:
 
-4. **Частичное исправление Telegram WebApp:**
-   - Добавлен флаг `--legacy-peer-deps` в Dockerfile
+1. **Удален неиспользуемый файл:**
+   - Удален `backend/app/models/db/base_patch.py`
+
+2. **Исправлен unique constraint в ai_cache.py:**
+   - Добавлен импорт `UniqueConstraint`
+   - Исправлен синтаксис с `{"unique_constraint": ...}` на `UniqueConstraint(...)`
+
+3. **Исправлено наследование UserStats:**
+   - Изменено наследование с `StatsBase` на `Base`
+   - Добавлен `__table_args__ = {'extend_existing': True}`
+   - Удален локальный класс `StatsBase`
+
+4. **Исправлен __tablename__ в DreamInterpretation:**
+   - Убран декоратор `@property` 
+   - Сделан обычный атрибут класса
+
+5. **Унифицированы импорты UUID:**
+   - Во всех моделях изменено с `from uuid import UUID as PythonUUID` на `from uuid import UUID`
+   - Изменены типы с `Mapped[PythonUUID]` на `Mapped[UUID]`
+
+6. **Исправлен ForeignKey в DreamEmbedding:**
+   - Убрано явное указание схемы с `"public.dreams.id"` на `"dreams.id"`
+
+### Результат:
+- Backend теперь запускается и работает стабильно ✅
+- Все worker процессы успешно стартуют
+- База данных и Redis подключаются корректно
 
 ## Следующие шаги
 
