@@ -1,0 +1,32 @@
+[Unit]
+Description=Razgazdayson Docker Compose Application
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+User=deploy
+Group=deploy
+WorkingDirectory=/home/deploy/razgazdayson
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+
+# Pull latest images
+ExecStartPre=/usr/local/bin/docker-compose -f docker/docker-compose.production.yml pull
+
+# Start services
+ExecStart=/usr/local/bin/docker-compose -f docker/docker-compose.production.yml up -d --remove-orphans
+
+# Stop services
+ExecStop=/usr/local/bin/docker-compose -f docker/docker-compose.production.yml down
+
+# Restart policy
+TimeoutStartSec=300
+TimeoutStopSec=120
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

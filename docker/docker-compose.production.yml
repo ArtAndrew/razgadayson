@@ -1,0 +1,151 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database with pgvector
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: razgazdayson_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-razgazdayson}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-razgazdayson}
+      POSTGRES_INITDB_ARGS: "-c shared_preload_libraries=vector"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks:
+      - razgazdayson_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-razgazdayson} && psql -U ${POSTGRES_USER:-razgazdayson} -d ${POSTGRES_DB:-razgazdayson} -c 'SELECT 1 FROM pg_extension WHERE extname = '''vector''';' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: razgazdayson_redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    networks:
+      - razgazdayson_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: razgazdayson_backend
+    restart: always
+    env_file:
+      - ../backend/.env.production
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-razgazdayson}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-razgazdayson}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+      - ENVIRONMENT=production
+      - DEBUG=False
+    networks:
+      - razgazdayson_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --timeout 120
+
+  # Frontend Next.js
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../docker/Dockerfile.frontend
+      args:
+        - NEXT_PUBLIC_API_URL=https://razgazdayson.ru/api/v1
+        - NEXT_PUBLIC_APP_URL=https://razgazdayson.ru
+    container_name: razgazdayson_frontend
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://razgazdayson.ru/api/v1
+      - NEXT_PUBLIC_APP_URL=https://razgazdayson.ru
+    networks:
+      - razgazdayson_network
+    depends_on:
+      - backend
+    command: node server.js
+
+  # Telegram Bot
+  telegram-bot:
+    build:
+      context: ../telegram-bot
+      dockerfile: ../docker/Dockerfile.bot
+    container_name: razgazdayson_bot
+    restart: always
+    env_file:
+      - ../telegram-bot/.env.production
+    environment:
+      - API_BASE_URL=http://backend:8000
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-razgazdayson}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-razgazdayson}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379/1
+      - USE_WEBHOOK=true
+      - WEBHOOK_URL=https://razgazdayson.ru/webhook
+    networks:
+      - razgazdayson_network
+    depends_on:
+      - backend
+      - postgres
+      - redis
+    command: python main.py
+
+  # Telegram WebApp
+  telegram-webapp:
+    build:
+      context: ../telegram-webapp
+      dockerfile: ../docker/Dockerfile.webapp
+      args:
+        - REACT_APP_API_URL=https://razgazdayson.ru/api/v1
+    container_name: razgazdayson_webapp
+    restart: always
+    environment:
+      - REACT_APP_API_URL=https://razgazdayson.ru/api/v1
+    networks:
+      - razgazdayson_network
+    depends_on:
+      - backend
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: razgazdayson_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../configs/nginx-docker.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - razgazdayson_network
+    depends_on:
+      - backend
+      - frontend
+      - telegram-webapp
+
+volumes:
+  postgres_data:
+  redis_data:
+  nginx_logs:
+
+networks:
+  razgazdayson_network:
+    driver: bridge

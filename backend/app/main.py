@@ -112,6 +112,29 @@ def setup_middleware(app: FastAPI) -> None:
             allowed_hosts=settings.ALLOWED_HOSTS
         )
     
+    # Proxy headers middleware for proper IP detection
+    from starlette.middleware.base import BaseHTTPMiddleware
+    
+    class ProxyHeadersMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request, call_next):
+            # Update host from X-Forwarded-Host if behind proxy
+            forwarded_host = request.headers.get("X-Forwarded-Host")
+            if forwarded_host:
+                request.scope["headers"] = [
+                    (k, v) for k, v in request.scope["headers"] if k != b"host"
+                ]
+                request.scope["headers"].append((b"host", forwarded_host.encode()))
+            
+            # Update scheme from X-Forwarded-Proto
+            forwarded_proto = request.headers.get("X-Forwarded-Proto")
+            if forwarded_proto:
+                request.scope["scheme"] = forwarded_proto
+            
+            response = await call_next(request)
+            return response
+    
+    app.add_middleware(ProxyHeadersMiddleware)
+    
     # Rate limiting
     app.state.limiter = limiter
 

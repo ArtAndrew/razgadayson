@@ -42,6 +42,12 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
     ALLOWED_HOSTS: List[str] = []
     
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",")]
+        return v
+    
     # Database
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"

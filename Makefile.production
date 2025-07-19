@@ -1,0 +1,152 @@
+# Production Makefile for Razgazdayson
+.PHONY: help deploy update rollback backup restore health logs status
+
+# Default target
+help:
+	@echo "Razgazdayson Production Commands:"
+	@echo ""
+	@echo "  make deploy     - Deploy application (build and start)"
+	@echo "  make update     - Update application (pull, build, restart)"
+	@echo "  make rollback   - Rollback to previous version"
+	@echo "  make backup     - Create database backup"
+	@echo "  make restore    - Restore database from backup"
+	@echo "  make health     - Check service health"
+	@echo "  make logs       - View service logs"
+	@echo "  make status     - Show service status"
+	@echo "  make ssl-renew  - Renew SSL certificates"
+	@echo ""
+
+# Variables
+COMPOSE_FILE = docker/docker-compose.production.yml
+BACKUP_DIR = ~/backups
+
+# Deploy application
+deploy:
+	@echo "Deploying Razgazdayson..."
+	docker-compose -f $(COMPOSE_FILE) build --no-cache
+	docker-compose -f $(COMPOSE_FILE) up -d
+	@echo "✅ Deployment complete!"
+	@make health
+
+# Update application
+update:
+	@echo "Updating Razgazdayson..."
+	git pull origin main
+	docker-compose -f $(COMPOSE_FILE) build
+	docker-compose -f $(COMPOSE_FILE) down
+	docker-compose -f $(COMPOSE_FILE) up -d
+	@echo "✅ Update complete!"
+	@make health
+
+# Rollback to previous version
+rollback:
+	@echo "Rolling back to previous version..."
+	git checkout HEAD~1
+	docker-compose -f $(COMPOSE_FILE) build
+	docker-compose -f $(COMPOSE_FILE) down
+	docker-compose -f $(COMPOSE_FILE) up -d
+	@echo "✅ Rollback complete!"
+
+# Create database backup
+backup:
+	@echo "Creating database backup..."
+	@mkdir -p $(BACKUP_DIR)
+	docker-compose -f $(COMPOSE_FILE) exec -T postgres \
+		pg_dump -U razgazdayson razgazdayson | gzip > $(BACKUP_DIR)/razgazdayson_$(shell date +%Y%m%d_%H%M%S).sql.gz
+	@echo "✅ Backup complete!"
+	@ls -lh $(BACKUP_DIR)/*.sql.gz | tail -5
+
+# Restore database from backup
+restore:
+	@echo "Available backups:"
+	@ls -1 $(BACKUP_DIR)/*.sql.gz | tail -10
+	@echo ""
+	@read -p "Enter backup filename to restore: " BACKUP_FILE; \
+	if [ -f "$(BACKUP_DIR)/$$BACKUP_FILE" ]; then \
+		echo "Restoring from $$BACKUP_FILE..."; \
+		gunzip < $(BACKUP_DIR)/$$BACKUP_FILE | docker-compose -f $(COMPOSE_FILE) exec -T postgres psql -U razgazdayson razgazdayson; \
+		echo "✅ Restore complete!"; \
+	else \
+		echo "❌ Backup file not found!"; \
+	fi
+
+# Check service health
+health:
+	@echo "Checking service health..."
+	@curl -s https://razgazdayson.ru/api/v1/health/ready | jq '.' || echo "❌ Backend not responding"
+	@curl -s https://razgazdayson.ru > /dev/null && echo "✅ Frontend is running" || echo "❌ Frontend not responding"
+	@docker-compose -f $(COMPOSE_FILE) ps
+
+# View logs
+logs:
+	docker-compose -f $(COMPOSE_FILE) logs -f --tail=100
+
+# View specific service logs
+logs-backend:
+	docker-compose -f $(COMPOSE_FILE) logs -f backend --tail=100
+
+logs-frontend:
+	docker-compose -f $(COMPOSE_FILE) logs -f frontend --tail=100
+
+logs-bot:
+	docker-compose -f $(COMPOSE_FILE) logs -f telegram-bot --tail=100
+
+logs-nginx:
+	docker-compose -f $(COMPOSE_FILE) logs -f nginx --tail=100
+
+# Show service status
+status:
+	@echo "Service Status:"
+	@docker-compose -f $(COMPOSE_FILE) ps
+	@echo ""
+	@echo "Resource Usage:"
+	@docker stats --no-stream
+
+# Renew SSL certificates
+ssl-renew:
+	@echo "Renewing SSL certificates..."
+	sudo certbot renew --nginx
+	@echo "✅ SSL renewal complete!"
+
+# Restart services
+restart:
+	@echo "Restarting services..."
+	docker-compose -f $(COMPOSE_FILE) restart
+	@echo "✅ Services restarted!"
+
+# Stop services
+stop:
+	@echo "Stopping services..."
+	docker-compose -f $(COMPOSE_FILE) down
+	@echo "✅ Services stopped!"
+
+# Clean up unused Docker resources
+clean:
+	@echo "Cleaning up Docker resources..."
+	docker system prune -f
+	docker volume prune -f
+	@echo "✅ Cleanup complete!"
+
+# Monitor resources
+monitor:
+	@watch -n 5 'docker stats --no-stream && echo "" && docker-compose -f $(COMPOSE_FILE) ps'
+
+# Database shell
+db-shell:
+	docker-compose -f $(COMPOSE_FILE) exec postgres psql -U razgazdayson -d razgazdayson
+
+# Redis CLI
+redis-cli:
+	docker-compose -f $(COMPOSE_FILE) exec redis redis-cli -a $${REDIS_PASSWORD}
+
+# Execute migrations
+migrate:
+	docker-compose -f $(COMPOSE_FILE) exec backend alembic upgrade head
+
+# Set Telegram webhook
+set-webhook:
+	@read -p "Enter your Telegram bot token: " BOT_TOKEN; \
+	read -p "Enter webhook secret: " WEBHOOK_SECRET; \
+	curl -F "url=https://razgazdayson.ru/webhook" \
+	     -F "secret_token=$$WEBHOOK_SECRET" \
+	     "https://api.telegram.org/bot$$BOT_TOKEN/setWebhook"
