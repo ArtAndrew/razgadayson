@@ -11,6 +11,22 @@
 - Python 3.12
 - Node.js 20 LTS
 
+## Последнее обновление: 19.07.2025
+
+### Известные проблемы и их решения:
+
+1. **UUID Type Errors в SQLAlchemy**
+   - Проблема: `The type provided inside the 'id' attribute Mapped annotation is the SQLAlchemy type`
+   - Решение: Использовать `from uuid import UUID as PythonUUID` и `Mapped[PythonUUID]` вместо `Mapped[UUID]`
+
+2. **Проблемы с паролем PostgreSQL**
+   - Проблема: Специальные символы в пароле вызывают ошибки парсинга DATABASE_URL
+   - Решение: Использовать пароль без специальных символов (например: `RazgadaysonSecurePass2024`)
+
+3. **Telegram WebApp зависимости**
+   - Проблема: `Cannot find module 'ajv/dist/compile/codegen'`
+   - Решение: Добавить флаг `--legacy-peer-deps` в Dockerfile при установке зависимостей
+
 ## Production Deployment
 
 ### 1. Server Setup
